@@ -128,6 +128,14 @@ function App() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-[#212121] text-white items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-[#212121] text-white">
       <Sidebar
