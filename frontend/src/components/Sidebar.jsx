@@ -2,6 +2,7 @@ import React from 'react';
 import { MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
+import Logo from './Logo';
 
 const Sidebar = ({ conversations, currentConversationId, onSelectConversation, onNewChat, onDeleteConversation }) => {
   const formatDate = (timestamp) => {
@@ -30,7 +31,14 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
 
   return (
     <div className="w-64 bg-[#171717] border-r border-gray-800 flex flex-col h-screen">
-      <div className="p-3">
+      <div className="p-3 pb-2 border-b border-gray-800">
+        <div className="flex items-center gap-2 mb-3">
+          <Logo size="sm" showText={false} />
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-white leading-tight">ManuGPT</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-[0.18em]">Free Version</span>
+          </div>
+        </div>
         <Button
           onClick={onNewChat}
           className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 text-white flex items-center justify-center gap-2 transition-colors"
@@ -40,7 +48,7 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
         </Button>
       </div>
       
-      <ScrollArea className="flex-1 px-2">
+      <ScrollArea className="flex-1 px-2 pt-3">
         {Object.entries(groupedConversations).map(([dateLabel, convs]) => (
           <div key={dateLabel} className="mb-4">
             <div className="text-xs text-gray-500 px-3 py-2 font-medium">{dateLabel}</div>
@@ -71,9 +79,9 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
         ))}
       </ScrollArea>
       
-      <div className="p-4 border-t border-gray-800">
-        <div className="text-xs text-gray-500 text-center">
-          ManuGPT - Free Version
+      <div className="p-3 border-t border-gray-800">
+        <div className="text-[11px] text-gray-500 text-center">
+          M-GPT AI Intelligence
         </div>
       </div>
     </div>

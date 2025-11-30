@@ -4,6 +4,7 @@ import ChatMessage from './ChatMessage';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
+import Logo from './Logo';
 
 const ChatInterface = ({ conversation, onSendMessage }) => {
   const [input, setInput] = useState('');
@@ -56,8 +57,8 @@ const ChatInterface = ({ conversation, onSendMessage }) => {
       {!conversation || conversation.messages.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
-              <span className="text-2xl font-bold text-gray-900">MGPT</span>
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
             </div>
             <h1 className="text-3xl font-semibold text-white mb-2">ManuGPT</h1>
             <p className="text-gray-400">How can I help you today?</p>
