@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 
 # Get backend URL from frontend .env file
-BACKEND_URL = "https://mgpt-assistant.preview.emergentagent.com/api"
+BACKEND_URL = "https://smart-dialogue-32.preview.emergentagent.com/api"
 
 class BackendTester:
     def __init__(self):
