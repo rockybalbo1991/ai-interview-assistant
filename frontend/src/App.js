@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
+import StealthScreen from './components/StealthScreen';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -11,10 +12,32 @@ function App() {
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isStealth, setIsStealth] = useState(false);
 
   useEffect(() => {
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Toggle stealth mode with Ctrl + Shift + H
+      if (event.ctrlKey && event.shiftKey && (event.key === 'h' || event.key === 'H')) {
+        event.preventDefault();
+        setIsStealth((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (isStealth) {
+      document.title = 'Notes';
+    } else {
+      document.title = 'ManuGPT';
+    }
+  }, [isStealth]);
 
   const loadConversations = async () => {
     try {
@@ -134,6 +157,10 @@ function App() {
         <div className="text-gray-400">Loading...</div>
       </div>
     );
+  }
+
+  if (isStealth) {
+    return <StealthScreen />;
   }
 
   return (
