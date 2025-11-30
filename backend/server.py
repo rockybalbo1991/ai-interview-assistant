@@ -6,7 +6,7 @@ import os
 import logging
 from pathlib import Path
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models import (
     Conversation, ConversationCreate, ConversationSummary,
@@ -50,7 +50,7 @@ async def create_conversation(conversation_input: ConversationCreate):
     """
     try:
         conversation = Conversation(
-            title=conversation_input.title or "New chat"
+            title=conversation_input.title or "New note"
         )
         
         # Save to database
@@ -71,13 +71,13 @@ async def get_conversations():
     """
     try:
         # Get all conversations sorted by updated_at
-        conversations = await conversations_collection.find().sort("updated_at", -1).to_list(1000)
+        conversations = await conversations_collection.find({}, {"_id": 0}).sort("updated_at", -1).to_list(1000)
         
         # Transform to summary format
         summaries = [
             ConversationSummary(
                 id=conv["id"],
-                title=conv["title"],
+                title=conv.get("title", "New note"),
                 timestamp=conv["updated_at"]
             )
             for conv in conversations
@@ -96,13 +96,13 @@ async def get_conversation(conversation_id: str):
     """
     try:
         # Get conversation
-        conversation = await conversations_collection.find_one({"id": conversation_id})
+        conversation = await conversations_collection.find_one({"id": conversation_id}, {"_id": 0})
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
         # Get messages for this conversation
         messages = await messages_collection.find(
-            {"conversation_id": conversation_id}
+            {"conversation_id": conversation_id}, {"_id": 0}
         ).sort("created_at", 1).to_list(1000)
         
         # Build response
@@ -148,7 +148,7 @@ async def chat(chat_request: ChatRequest):
     """
     try:
         # Get conversation to check if it exists
-        conversation = await conversations_collection.find_one({"id": chat_request.conversation_id})
+        conversation = await conversations_collection.find_one({"id": chat_request.conversation_id}, {"_id": 0})
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found")
         
@@ -172,13 +172,13 @@ async def chat(chat_request: ChatRequest):
             title = chat_request.message[:50]
             await conversations_collection.update_one(
                 {"id": chat_request.conversation_id},
-                {"$set": {"title": title, "updated_at": datetime.utcnow()}}
+                {"$set": {"title": title, "updated_at": datetime.now(timezone.utc)}}
             )
         else:
             # Just update the timestamp
             await conversations_collection.update_one(
                 {"id": chat_request.conversation_id},
-                {"$set": {"updated_at": datetime.utcnow()}}
+                {"$set": {"updated_at": datetime.now(timezone.utc)}}
             )
         
         # Get AI response
