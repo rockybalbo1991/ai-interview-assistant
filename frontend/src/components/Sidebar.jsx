@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Plus, Trash2 } from 'lucide-react';
+import { FileText, Plus, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import Logo from './Logo';
@@ -20,12 +20,12 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
     }
   };
 
-  const groupedConversations = conversations.reduce((groups, conv) => {
+  const groupedConversations = conversations.reduce((groups, conv, index) => {
     const dateLabel = formatDate(conv.timestamp);
     if (!groups[dateLabel]) {
       groups[dateLabel] = [];
     }
-    groups[dateLabel].push(conv);
+    groups[dateLabel].push({ ...conv, displayTitle: conv.title || `Note ${index + 1}` });
     return groups;
   }, {});
 
@@ -35,8 +35,8 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
         <div className="flex items-center gap-2 mb-3">
           <Logo size="sm" showText={false} />
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-white leading-tight">ManuGPT</span>
-            <span className="text-[10px] text-gray-500 uppercase tracking-[0.18em]">Free Version</span>
+            <span className="text-sm font-semibold text-white leading-tight">Notes</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-[0.18em]">Personal Workspace</span>
           </div>
         </div>
         <Button
@@ -44,7 +44,7 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
           className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 text-white flex items-center justify-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          New chat
+          New note
         </Button>
       </div>
       
@@ -62,8 +62,8 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
                 }`}
                 onClick={() => onSelectConversation(conv.id)}
               >
-                <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                <span className="text-sm truncate flex-1">{conv.title}</span>
+                <FileText className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm truncate flex-1">{conv.displayTitle || 'Untitled note'}</span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -81,7 +81,7 @@ const Sidebar = ({ conversations, currentConversationId, onSelectConversation, o
       
       <div className="p-3 border-t border-gray-800">
         <div className="text-[11px] text-gray-500 text-center">
-          M-GPT AI Intelligence
+          Private Notes
         </div>
       </div>
     </div>

@@ -35,16 +35,16 @@ function App() {
     if (isStealth) {
       document.title = 'Notes';
     } else {
-      document.title = 'ManuGPT';
+      document.title = 'Notes';
     }
   }, [isStealth]);
 
   const loadConversations = async () => {
     try {
       const response = await axios.get(`${API}/conversations`);
-      const loadedConversations = response.data.map(conv => ({
+      const loadedConversations = response.data.map((conv, index) => ({
         id: conv.id,
-        title: conv.title,
+        title: conv.title || `Note ${index + 1}`,
         timestamp: new Date(conv.timestamp),
         messages: []
       }));
@@ -78,12 +78,12 @@ function App() {
   const handleNewChat = async () => {
     try {
       const response = await axios.post(`${API}/conversations`, {
-        title: 'New chat'
+        title: 'New note'
       });
       
       const newConversation = {
         id: response.data.id,
-        title: response.data.title,
+        title: response.data.title || 'New note',
         timestamp: new Date(response.data.created_at),
         messages: []
       };
@@ -137,7 +137,7 @@ function App() {
           return {
             ...conv,
             messages: newMessages,
-            title: conv.messages.length === 0 ? message.substring(0, 50) : conv.title
+            title: conv.messages.length === 0 ? (conv.title || message.substring(0, 50)) : conv.title
           };
         }
         return conv;
