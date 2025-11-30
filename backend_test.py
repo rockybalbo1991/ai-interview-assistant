@@ -305,12 +305,15 @@ class BackendTester:
                 if conv1_id in self.conversations_created:
                     self.conversations_created.remove(conv1_id)
                 
-                # Verify it's actually deleted by trying to get it
-                deleted_conv = await self.get_conversation(conv1_id)
-                if deleted_conv is None:
-                    self.log_result("Verify Deletion", True, "Conversation successfully deleted and not retrievable")
-                else:
-                    self.log_result("Verify Deletion", False, "Conversation still exists after deletion")
+                # Verify it's actually deleted by trying to get it (should return 404)
+                try:
+                    async with self.session.get(f"{BACKEND_URL}/conversations/{conv1_id}") as response:
+                        if response.status == 404:
+                            self.log_result("Verify Deletion", True, "Conversation successfully deleted and returns 404")
+                        else:
+                            self.log_result("Verify Deletion", False, f"Expected 404, got {response.status}")
+                except Exception as e:
+                    self.log_result("Verify Deletion", False, f"Error verifying deletion: {str(e)}")
             
             # 8. Test error handling for invalid conversation IDs
             await self.test_invalid_conversation_id()
