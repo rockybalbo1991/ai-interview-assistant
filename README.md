@@ -9,31 +9,32 @@ You can:
 
 ---
 
-## 0. Quick one‑click installation (local)
+## 0. Quick setup and run (one‑click style)
 
-After cloning the repo, you can install **both backend and frontend dependencies** with a single script.
+After cloning the repo from GitHub, most users only need these steps.
 
-### On macOS / Linux / WSL / Git Bash
+### macOS / Linux / WSL
 
 ```bash
-cd app          # if this repository root contains /app
-chmod +x install.sh
-./install.sh
+cd app                    # go into the app folder
+chmod +x install.sh run.sh
+./install.sh              # installs backend + frontend dependencies
+./run.sh                  # starts backend + frontend together
 ```
 
-### On Windows (Command Prompt / PowerShell)
+Then open: **http://localhost:3000**
+
+### Windows
 
 ```bat
-cd app          ^>  if this repository root contains /app
-install.bat
+cd app                    REM go into the app folder
+install.bat               REM installs backend + frontend dependencies
+run.bat                   REM starts backend + frontend (backend in new window)
 ```
 
-The installer will:
-- Create a Python virtual environment at `backend/venv`.
-- Install backend dependencies from `backend/requirements.txt`.
-- Install frontend dependencies with `yarn install` inside `frontend/`.
+> Make sure **MongoDB** is running on your machine (default `mongodb://localhost:27017`) before running the app.
 
-After that, follow the **"How to run locally"** section below.
+You still need to create the `.env` files once (see below), but after that, `run.sh` / `run.bat` is usually all you need.
 
 ---
 
@@ -74,12 +75,16 @@ Folder layout (inside `/app`):
 ```bash
 /app
   ├── backend       # FastAPI app, MongoDB, AI integration
-  └── frontend      # React app (Notes UI + stealth mode)
+  ├── frontend      # React app (Notes UI + stealth mode)
+  ├── install.sh    # one‑time installer (macOS/Linux/WSL)
+  ├── install.bat   # one‑time installer (Windows)
+  ├── run.sh        # start backend + frontend (macOS/Linux/WSL)
+  └── run.bat       # start backend + frontend (Windows)
 ```
 
 ---
 
-## 3. How to run locally (manual steps)
+## 3. How to run locally (manual details)
 
 ### 3.1. Prerequisites
 
