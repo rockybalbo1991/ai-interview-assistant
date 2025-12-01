@@ -1,112 +1,45 @@
 # Interview Notes AI (ManuGPT Stealth Notes)
 
-This project is a full‑stack "interview helper" web app that looks like a **simple notes application** but actually uses an AI model in the background.
+This project is a full‑stack **interview helper** that looks like a normal **Notes** application.
 
-You can:
-- Practice interview questions.
-- Keep the UI looking like normal **Notes** so it’s safer during screen share.
-- Toggle a **stealth mode** that shows a plain notes page with a keyboard shortcut.
+- You type questions or topics at the bottom.
+- The app talks to an AI model in the backend and shows answers as **Me / AI**.
+- The design is simple Notes UI + **stealth mode** so it is safer when you are sharing your screen.
 
 ---
 
-## 0. Quick setup and run (one‑click style)
+## 1. Requirements (before you start)
 
-After cloning the repo from GitHub, most users only need these steps.
+You only need these tools on your machine:
 
-### macOS / Linux / WSL
+1. **Git** – to download the project
+2. **Python 3.10+** – for the backend (FastAPI)
+3. **Node.js (LTS) + yarn** – for the frontend (React)
+4. **MongoDB** – can be local MongoDB Community Server or a MongoDB Atlas URI
+5. **Emergent universal key** – this will be set as `EMERGENT_LLM_KEY` in backend `.env`
+
+> If you only want to see the UI without real AI answers, you can leave `EMERGENT_LLM_KEY` empty and later change the backend to mock responses.
+
+---
+
+## 2. First‑time setup (step by step)
+
+These steps are the same whether you are on **Windows** or **macOS/Linux**, only the commands differ slightly.
+
+### Step 1 – Clone the repository
 
 ```bash
-cd app                    # go into the app folder
-chmod +x install.sh run.sh
-./install.sh              # installs backend + frontend dependencies
-./run.sh                  # starts backend + frontend together
+git clone https://github.com/your-username/your-repo.git
+cd your-repo/app
 ```
 
-Then open: **http://localhost:3000**
-
-### Windows
-
-```bat
-cd app                    REM go into the app folder
-install.bat               REM installs backend + frontend dependencies
-run.bat                   REM starts backend + frontend (backend in new window)
-```
-
-> Make sure **MongoDB** is running on your machine (default `mongodb://localhost:27017`) before running the app.
-
-You still need to create the `.env` files once (see below), but after that, `run.sh` / `run.bat` is usually all you need.
+Replace `your-username/your-repo` with your actual GitHub path.
 
 ---
 
-## 1. Features
+### Step 2 – Create backend `.env`
 
-- **Notes‑style UI**
-  - Sidebar shows "Notes" and "Private Notes" instead of chat/conversation wording.
-  - Each conversation appears like a **note** (Note 1, Note 2, or your custom title).
-  - Main area looks like a dark notes editor.
-
-- **AI Assistant hidden behind notes**
-  - Under the hood, each note is actually a chat between **Me** and **AI**.
-  - AI answers come from OpenAI (via Emergent Integrations) using the `EMERGENT_LLM_KEY`.
-
-- **Stealth Mode (for interviews)**
-  - Keyboard shortcut: **Ctrl + Shift + H**
-  - When enabled:
-    - The whole app switches to a very simple **Notes** page (title + textarea).
-    - The browser tab title shows **"Notes"**.
-    - No GPT / AI / interview wording is visible.
-  - Press **Ctrl + Shift + H** again to return to the normal notes UI.
-
-- **Multi‑note (multi‑conversation) support**
-  - Create, view, and delete notes.
-  - Each note keeps its own history of Me / AI messages.
-
----
-
-## 2. Tech Stack
-
-- **Frontend:** React (Create React App), TailwindCSS, shadcn/ui components
-- **Backend:** FastAPI (Python)
-- **Database:** MongoDB (via `motor` async driver)
-- **AI Integration:** `emergentintegrations` using `EMERGENT_LLM_KEY`
-
-Folder layout (inside `/app`):
-
-```bash
-/app
-  ├── backend       # FastAPI app, MongoDB, AI integration
-  ├── frontend      # React app (Notes UI + stealth mode)
-  ├── install.sh    # one‑time installer (macOS/Linux/WSL)
-  ├── install.bat   # one‑time installer (Windows)
-  ├── run.sh        # start backend + frontend (macOS/Linux/WSL)
-  └── run.bat       # start backend + frontend (Windows)
-```
-
----
-
-## 3. How to run locally (manual details)
-
-### 3.1. Prerequisites
-
-- Python 3.10+
-- Node.js + yarn
-- MongoDB running locally (or a MongoDB URI)
-- An **Emergent universal key** configured as `EMERGENT_LLM_KEY` (if you want real AI replies)
-
-> If you just want to run the UI without AI, you can leave `EMERGENT_LLM_KEY` empty and adjust the backend to mock responses.
-
----
-
-### 3.2. Backend setup (FastAPI)
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Create a `.env` file in `backend/` (if not already present):
+Create a file: `app/backend/.env`
 
 ```env
 MONGO_URL="mongodb://localhost:27017"   # or your MongoDB URI
@@ -115,103 +48,155 @@ CORS_ORIGINS="*"
 EMERGENT_LLM_KEY=sk-emergent-...        # your Emergent universal key
 ```
 
-Run the backend server locally:
-
-```bash
-uvicorn server:app --host 0.0.0.0 --port 8001
-```
-
-The API will be available at: `http://localhost:8001/api`.
-
-Key endpoints:
-
-- `GET  /api/` – health check
-- `POST /api/conversations` – create a new note
-- `GET  /api/conversations` – list notes
-- `GET  /api/conversations/{id}` – get one note with all messages
-- `DELETE /api/conversations/{id}` – delete a note and its messages
-- `POST /api/chat` – send a message and get an AI reply
+- If MongoDB runs on another host/port, update `MONGO_URL` accordingly.
+- **Do not commit this file to public GitHub** because it contains your secret key.
 
 ---
 
-### 3.3. Frontend setup (React)
+### Step 3 – Create frontend `.env`
 
-```bash
-cd frontend
-yarn install
-```
-
-Create a `.env` file in `frontend/`:
+Create a file: `app/frontend/.env`
 
 ```env
 REACT_APP_BACKEND_URL=http://localhost:8001
 ```
 
-Run the frontend locally:
+- This must point to your backend base URL **without** `/api`.
+- When you deploy backend somewhere else, change this value to that URL.
+
+---
+
+### Step 4 – Install dependencies (one‑time)
+
+#### On macOS / Linux / WSL
 
 ```bash
-yarn start
+cd app
+chmod +x install.sh run.sh
+./install.sh
 ```
+
+What this does:
+- Creates a Python virtual environment in `backend/venv`.
+- Installs all Python packages from `backend/requirements.txt`.
+- Runs `yarn install` inside `frontend/`.
+
+#### On Windows
+
+Open **Command Prompt** or **PowerShell**, then:
+
+```bat
+cd your-repo\app
+install.bat
+```
+
+What this does:
+- Creates `backend\venv`.
+- Installs all Python packages from `backend\requirements.txt`.
+- Runs `yarn install` in `frontend\`.
+
+Do this only once on each machine.
+
+---
+
+## 3. Start the application (everyday usage)
+
+After the first‑time setup is done and `.env` files are ready, daily use is simple.
+
+> Make sure **MongoDB** server is running (default: `mongodb://localhost:27017`).
+
+### macOS / Linux / WSL
+
+```bash
+cd your-repo/app
+./run.sh
+```
+
+This script will:
+- Activate the backend virtualenv.
+- Start FastAPI backend on **http://localhost:8001**.
+- Start React frontend on **http://localhost:3000**.
+
+Then open your browser at **http://localhost:3000**.
+
+### Windows
+
+```bat
+cd your-repo\app
+run.bat
+```
+
+This script will:
+- Open a new window for backend (FastAPI on `http://localhost:8001`).
+- Start frontend (React) in the current window on `http://localhost:3000`.
 
 Open **http://localhost:3000** in your browser.
 
----
-
-## 4. How to use (for interviews)
-
-### Normal practice mode
-
-1. Open the app in your browser.
-2. Click **New note** in the sidebar.
-3. Type your interview question or prompt in the bottom input and press **Enter**.
-4. You’ll see messages appear as **Me** and **AI**.
-
-### Stealth mode during screen share
-
-- **Shortcut:** `Ctrl + Shift + H`
-
-Steps:
-
-1. Before or during screen share, press **Ctrl + Shift + H**.
-2. The screen changes to a simple **Notes** page:
-   - Title: "Notes"
-   - Textarea for writing plain notes
-   - No visible AI / GPT / chat labels
-3. When you are done sharing, press **Ctrl + Shift + H** again to come back to the full notes + AI view.
-
-> Tip: For maximum safety in real interviews, keep this app on a **second monitor** or a **second device (phone/tablet)** so it never appears in your shared screen at all.
+When you stop the frontend (`Ctrl + C`), you can close the backend window manually.
 
 ---
 
-## 5. Deploying
+## 4. How to use the app (interview practice)
 
-This project was originally built and deployed on the **Emergent** platform.
+### Normal mode
 
-You can:
+1. Open **http://localhost:3000**.
+2. In the left sidebar, click **New note**.
+3. At the bottom input box, type your interview question or prompt.
+4. Press **Enter**.
+5. In the main area you will see messages as **Me** and **AI**.
 
-1. Develop here on Emergent and click **"Save to GitHub"** to push code to your repo.
-2. Clone the repo locally and deploy to your own hosting (Render, Railway, etc.) using:
-   - `backend` as a FastAPI + MongoDB service
-   - `frontend` as a static React build served by any static host
+Each note keeps its own history.
 
-If you deploy outside Emergent, make sure:
+### Stealth mode (during screen share)
 
-- The backend listens on `0.0.0.0` and a known port.
-- All API routes are served under `/api`.
-- The frontend `REACT_APP_BACKEND_URL` points to your deployed backend URL.
+- Keyboard shortcut: **`Ctrl + Shift + H`**
+
+When you press `Ctrl + Shift + H`:
+
+- The whole app switches to a very simple **Notes** screen:
+  - Title: `Notes`
+  - Sub‑text: quick notes for the day
+  - One big textarea
+- No GPT / AI / chat / ManuGPT text is visible anywhere.
+- The browser tab title also shows **"Notes"**.
+
+Press **`Ctrl + Shift + H`** again to return to the full notes + AI view.
+
+> For real interviews, best is to keep this app on a **second monitor** or a **second device (phone / tablet)**, so it never appears in your shared screen at all.
 
 ---
 
-## 6. Keyboard shortcuts
+## 5. Project structure
 
-- **Ctrl + Shift + H** – toggle **Stealth Notes** view on/off.
+Inside the `app/` folder:
+
+```bash
+app/
+  backend/        # FastAPI backend, MongoDB models, AI integration
+  frontend/       # React frontend (Notes UI + stealth mode)
+  install.sh      # one-time installer for macOS/Linux/WSL
+  install.bat     # one-time installer for Windows
+  run.sh          # start backend + frontend together (macOS/Linux/WSL)
+  run.bat         # start backend + frontend together (Windows)
+```
+
+Backend key points:
+- All API routes start with `/api`.
+- Uses MongoDB for conversations and messages.
+- Uses `EMERGENT_LLM_KEY` (Emergent universal key) to call the AI model.
+
+Frontend key points:
+- Uses `REACT_APP_BACKEND_URL` from `.env` to call the backend.
+- Renders messages in a notes‑style layout.
+- Implements **stealth mode** shortcut.
 
 ---
 
-## 7. Safety notes
+## 6. Safety notes
 
-This tool is meant to help you **practice** interviews and structure your thoughts.
-Use it responsibly. In real interviews:
-- Avoid reading answers word‑for‑word.
-- Use the AI as a guide, not a crutch.
-- Make sure you can explain and extend any answer in your own words.
+This tool is designed to **help you practice** and organise your thoughts.
+
+- Do not depend on it blindly during real interviews.
+- Try to understand every answer and be ready to explain in your own words.
+- Use it as a **co‑pilot**, not as a full replacement for your own knowledge.
