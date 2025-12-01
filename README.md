@@ -9,6 +9,34 @@ You can:
 
 ---
 
+## 0. Quick one‑click installation (local)
+
+After cloning the repo, you can install **both backend and frontend dependencies** with a single script.
+
+### On macOS / Linux / WSL / Git Bash
+
+```bash
+cd app          # if this repository root contains /app
+chmod +x install.sh
+./install.sh
+```
+
+### On Windows (Command Prompt / PowerShell)
+
+```bat
+cd app          ^>  if this repository root contains /app
+install.bat
+```
+
+The installer will:
+- Create a Python virtual environment at `backend/venv`.
+- Install backend dependencies from `backend/requirements.txt`.
+- Install frontend dependencies with `yarn install` inside `frontend/`.
+
+After that, follow the **"How to run locally"** section below.
+
+---
+
 ## 1. Features
 
 - **Notes‑style UI**
@@ -41,7 +69,7 @@ You can:
 - **Database:** MongoDB (via `motor` async driver)
 - **AI Integration:** `emergentintegrations` using `EMERGENT_LLM_KEY`
 
-Folder layout (in this repo):
+Folder layout (inside `/app`):
 
 ```bash
 /app
@@ -51,7 +79,7 @@ Folder layout (in this repo):
 
 ---
 
-## 3. How to run locally
+## 3. How to run locally (manual steps)
 
 ### 3.1. Prerequisites
 
