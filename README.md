@@ -136,7 +136,63 @@ When you stop the frontend (`Ctrl + C`), you can close the backend window manual
 
 ---
 
-## 4. How to use the app (interview practice)
+## 4. Optional: Desktop launcher and Windows .exe
+
+If you want something closer to a "single application" experience on your own machine, you can use `desktop_launcher.py` and (optionally) build a Windows `.exe` from it.
+
+### 4.1 Run the desktop launcher (without .exe)
+
+After running the installer scripts (`install.sh` / `install.bat`) and creating `.env` files:
+
+```bash
+cd your-repo/app
+python desktop_launcher.py   # or python3 desktop_launcher.py
+```
+
+This will:
+- Start backend (FastAPI) on `http://localhost:8001`.
+- Start frontend (React dev server) on `http://localhost:3000`.
+- Try to open your default browser automatically.
+
+You still need Python, Node, MongoDB and the dependencies installed.
+
+### 4.2 Build Windows .exe with PyInstaller (advanced, optional)
+
+> These steps are done **on your Windows machine**, not on Emergent.
+
+1. Install PyInstaller in your backend virtualenv:
+
+   ```bat
+   cd your-repo\app\backend
+   call venv\Scripts\activate
+   pip install pyinstaller
+   ```
+
+2. Go to the `app` folder and build the exe:
+
+   ```bat
+   cd ..    REM now in your-repo\app
+   pyinstaller --onefile desktop_launcher.py --name InterviewNotesAI
+   ```
+
+3. After it finishes, PyInstaller will create a `dist` folder:
+
+   ```text
+   your-repo\app\dist\InterviewNotesAI.exe
+   ```
+
+4. Double‑click `InterviewNotesAI.exe` to:
+   - Start backend and frontend.
+   - Open your browser at `http://localhost:3000`.
+
+**Important:**
+- The `.exe` still expects that you already ran `install.bat` once and that
+  MongoDB is running and `.env` files are present.
+- Do **not** hard‑code your `EMERGENT_LLM_KEY` into the code or exe; keep it only in `backend/.env`.
+
+---
+
+## 5. How to use the app (interview practice)
 
 ### Normal mode
 
@@ -167,7 +223,7 @@ Press **`Ctrl + Shift + H`** again to return to the full notes + AI view.
 
 ---
 
-## 5. Project structure
+## 6. Project structure
 
 Inside the `app/` folder:
 
@@ -179,6 +235,7 @@ app/
   install.bat     # one-time installer for Windows
   run.sh          # start backend + frontend together (macOS/Linux/WSL)
   run.bat         # start backend + frontend together (Windows)
+  desktop_launcher.py  # optional desktop-style launcher for local use / exe build
 ```
 
 Backend key points:
@@ -193,7 +250,7 @@ Frontend key points:
 
 ---
 
-## 6. Safety notes
+## 7. Safety notes
 
 This tool is designed to **help you practice** and organise your thoughts.
 
