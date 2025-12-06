@@ -17,16 +17,16 @@ const ChatMessage = ({ message }) => {
 
   return (
     <div className={`w-full py-6 ${
-      isUser ? 'bg-[#212121]' : 'bg-[#2C2C2C]'
+      isUser ? 'bg-[#212121]' : 'bg-[#212121]'
     }`}>
       <div className="max-w-3xl mx-auto px-4 flex gap-4">
         <div className="flex-shrink-0">
           <div className={`w-8 h-8 rounded-sm flex items-center justify-center text-sm font-bold ${
             isUser 
-              ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white' 
+              ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white' 
               : 'bg-gradient-to-br from-emerald-400 to-cyan-400 text-gray-900'
           }`}>
-            {isUser ? 'You' : 'MGPT'}
+            {isUser ? 'Me' : 'AI'}
           </div>
         </div>
         

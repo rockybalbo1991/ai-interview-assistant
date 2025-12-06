@@ -4,6 +4,7 @@ import ChatMessage from './ChatMessage';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
+import Logo from './Logo';
 
 const ChatInterface = ({ conversation, onSendMessage }) => {
   const [input, setInput] = useState('');
@@ -56,11 +57,11 @@ const ChatInterface = ({ conversation, onSendMessage }) => {
       {!conversation || conversation.messages.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
-              <span className="text-2xl font-bold text-gray-900">MGPT</span>
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
             </div>
-            <h1 className="text-3xl font-semibold text-white mb-2">ManuGPT</h1>
-            <p className="text-gray-400">How can I help you today?</p>
+            <h1 className="text-3xl font-semibold text-white mb-2">Notes</h1>
+            <p className="text-gray-400">Start typing to add a new note.</p>
           </div>
         </div>
       ) : (
@@ -73,7 +74,7 @@ const ChatInterface = ({ conversation, onSendMessage }) => {
               <div className="max-w-3xl mx-auto px-4 flex gap-4">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 rounded-sm bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-sm font-bold text-gray-900">
-                    MGPT
+                    AI
                   </div>
                 </div>
                 <div className="flex-1">
@@ -97,7 +98,7 @@ const ChatInterface = ({ conversation, onSendMessage }) => {
               value={input}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder="Message ManuGPT..."
+              placeholder="Write your note here..."
               className="flex-1 bg-transparent border-0 text-white placeholder-gray-500 resize-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[24px] max-h-[200px]"
               style={{ height: 'auto' }}
               rows={1}
@@ -111,7 +112,7 @@ const ChatInterface = ({ conversation, onSendMessage }) => {
             </Button>
           </div>
           <p className="text-xs text-gray-500 text-center mt-2">
-            ManuGPT can make mistakes. Check important info.
+            Press Enter to save your note. Press Ctrl + Shift + H to switch to simple notes view.
           </p>
         </form>
       </div>
