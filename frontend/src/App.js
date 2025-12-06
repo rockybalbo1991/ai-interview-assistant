@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
@@ -60,16 +60,55 @@ function App() {
     }
   };
 
-  const loadConversationMessages = async (conversationId) => {
-    try {
-      const response = await axios.get(`${API}/conversations/${conversationId}`);
-      setConversations(prev => prev.map(conv => 
-        conv.id === conversationId 
-          ? { ...conv, messages: response.data.messages }
-          : conv
-      ));
-    } catch (error) {
-      console.error('Error loading messages:', error);
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return (
+          <Home
+            onStartPractice={(role) => {
+              setSelectedRole(role);
+              setCurrentPage('practice');
+            }}
+            onStartMock={(role) => {
+              setSelectedRole(role);
+              setCurrentPage('mock');
+            }}
+            onViewTips={() => setCurrentPage('tips')}
+          />
+        );
+      case 'practice':
+        return (
+          <Practice
+            role={selectedRole}
+            onBack={() => setCurrentPage('home')}
+            onComplete={(data) => {
+              setInterviewData(data);
+              setCurrentPage('results');
+            }}
+          />
+        );
+      case 'mock':
+        return (
+          <MockInterview
+            role={selectedRole}
+            onBack={() => setCurrentPage('home')}
+            onComplete={(data) => {
+              setInterviewData(data);
+              setCurrentPage('results');
+            }}
+          />
+        );
+      case 'results':
+        return (
+          <Results
+            data={interviewData}
+            onBackHome={() => setCurrentPage('home')}
+          />
+        );
+      case 'tips':
+        return <Tips onBack={() => setCurrentPage('home')} />;
+      default:
+        return <Home onStartPractice={() => setCurrentPage('practice')} />;
     }
   };
 
