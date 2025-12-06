@@ -1,156 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
-import Sidebar from './components/Sidebar';
-import ChatInterface from './components/ChatInterface';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import Home from './pages/Home';
+import Practice from './pages/Practice';
+import MockInterview from './pages/MockInterview';
+import Results from './pages/Results';
+import Tips from './pages/Tips';
 
 function App() {
-  const [conversations, setConversations] = useState([]);
-  const [currentConversationId, setCurrentConversationId] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState('home');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [interviewData, setInterviewData] = useState(null);
 
-  useEffect(() => {
-    loadConversations();
-  }, []);
-
-  const loadConversations = async () => {
-    try {
-      const response = await axios.get(`${API}/conversations`);
-      const loadedConversations = response.data.map(conv => ({
-        id: conv.id,
-        title: conv.title,
-        timestamp: new Date(conv.timestamp),
-        messages: []
-      }));
-      setConversations(loadedConversations);
-      if (loadedConversations.length > 0) {
-        setCurrentConversationId(loadedConversations[0].id);
-        await loadConversationMessages(loadedConversations[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
-      setLoading(false);
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return (
+          <Home
+            onStartPractice={(role) => {
+              setSelectedRole(role);
+              setCurrentPage('practice');
+            }}
+            onStartMock={(role) => {
+              setSelectedRole(role);
+              setCurrentPage('mock');
+            }}
+            onViewTips={() => setCurrentPage('tips')}
+          />
+        );
+      case 'practice':
+        return (
+          <Practice
+            role={selectedRole}
+            onBack={() => setCurrentPage('home')}
+            onComplete={(data) => {
+              setInterviewData(data);
+              setCurrentPage('results');
+            }}
+          />
+        );
+      case 'mock':
+        return (
+          <MockInterview
+            role={selectedRole}
+            onBack={() => setCurrentPage('home')}
+            onComplete={(data) => {
+              setInterviewData(data);
+              setCurrentPage('results');
+            }}
+          />
+        );
+      case 'results':
+        return (
+          <Results
+            data={interviewData}
+            onBackHome={() => setCurrentPage('home')}
+          />
+        );
+      case 'tips':
+        return <Tips onBack={() => setCurrentPage('home')} />;
+      default:
+        return <Home onStartPractice={() => setCurrentPage('practice')} />;
     }
   };
 
-  const loadConversationMessages = async (conversationId) => {
-    try {
-      const response = await axios.get(`${API}/conversations/${conversationId}`);
-      setConversations(prev => prev.map(conv => 
-        conv.id === conversationId 
-          ? { ...conv, messages: response.data.messages }
-          : conv
-      ));
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    }
-  };
-
-  const currentConversation = conversations.find(c => c.id === currentConversationId);
-
-  const handleNewChat = async () => {
-    try {
-      const response = await axios.post(`${API}/conversations`, {
-        title: 'New chat'
-      });
-      
-      const newConversation = {
-        id: response.data.id,
-        title: response.data.title,
-        timestamp: new Date(response.data.created_at),
-        messages: []
-      };
-      
-      setConversations(prev => [newConversation, ...prev]);
-      setCurrentConversationId(newConversation.id);
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-    }
-  };
-
-  const handleSelectConversation = async (id) => {
-    setCurrentConversationId(id);
-    const conversation = conversations.find(c => c.id === id);
-    if (conversation && conversation.messages.length === 0) {
-      await loadConversationMessages(id);
-    }
-  };
-
-  const handleDeleteConversation = async (id) => {
-    try {
-      await axios.delete(`${API}/conversations/${id}`);
-      
-      const filtered = conversations.filter(c => c.id !== id);
-      setConversations(filtered);
-      
-      if (currentConversationId === id) {
-        setCurrentConversationId(filtered.length > 0 ? filtered[0].id : null);
-        if (filtered.length > 0) {
-          await loadConversationMessages(filtered[0].id);
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting conversation:', error);
-    }
-  };
-
-  const handleSendMessage = async (message) => {
-    if (!currentConversationId) return;
-    
-    try {
-      const response = await axios.post(`${API}/chat`, {
-        conversation_id: currentConversationId,
-        message: message
-      });
-      
-      // Update conversation with both messages
-      setConversations(prev => prev.map(conv => {
-        if (conv.id === currentConversationId) {
-          const newMessages = [...conv.messages, response.data.user_message, response.data.assistant_message];
-          return {
-            ...conv,
-            messages: newMessages,
-            title: conv.messages.length === 0 ? message.substring(0, 50) : conv.title
-          };
-        }
-        return conv;
-      }));
-      
-      // Reload conversations to update titles and timestamps
-      await loadConversations();
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw error;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex h-screen bg-[#212121] text-white items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-screen bg-[#212121] text-white">
-      <Sidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewChat={handleNewChat}
-        onDeleteConversation={handleDeleteConversation}
-      />
-      <ChatInterface
-        conversation={currentConversation}
-        onSendMessage={handleSendMessage}
-      />
-    </div>
-  );
+  return <div className="App">{renderPage()}</div>;
 }
 
 export default App;
