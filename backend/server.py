@@ -5,14 +5,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from typing import List
-from datetime import datetime
+from typing import List, Optional
+from pydantic import BaseModel
 
-from models import (
-    Conversation, ConversationCreate, ConversationSummary,
-    Message, MessageCreate, ChatRequest, ChatResponse
-)
-from ai_service import ai_service
+from interview_service import interview_service
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -22,14 +18,8 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Collections
-conversations_collection = db.conversations
-messages_collection = db.messages
-
-# Create the main app without a prefix
+# Create the main app
 app = FastAPI()
-
-# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
 # Configure logging
@@ -39,178 +29,93 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Request/Response Models
+class QuestionRequest(BaseModel):
+    role: str
+    count: int = 5
+    difficulty: str = 'mixed'
+
+class EvaluationRequest(BaseModel):
+    question: dict
+    answer: str
+    role: str
+
+class MockStartRequest(BaseModel):
+    role: str
+
+class MockContinueRequest(BaseModel):
+    session_id: str
+    answer: str
+    role: str
+    question_count: int = 0
+
+# API Endpoints
 @api_router.get("/")
 async def root():
-    return {"message": "ManuGPT API is running"}
+    return {"message": "AI Interview Assistant API is running"}
 
-@api_router.post("/conversations", response_model=Conversation)
-async def create_conversation(conversation_input: ConversationCreate):
+@api_router.post("/interview/generate-questions")
+async def generate_questions(request: QuestionRequest):
     """
-    Create a new conversation
+    Generate interview questions based on role
     """
     try:
-        conversation = Conversation(
-            title=conversation_input.title or "New chat"
+        questions = await interview_service.generate_questions(
+            role=request.role,
+            count=request.count,
+            difficulty=request.difficulty
         )
-        
-        # Save to database
-        conversation_dict = conversation.dict()
-        await conversations_collection.insert_one(conversation_dict)
-        
-        logger.info(f"Created conversation: {conversation.id}")
-        return conversation
-        
+        return {"questions": questions}
     except Exception as e:
-        logger.error(f"Error creating conversation: {str(e)}")
+        logger.error(f"Error generating questions: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/conversations", response_model=List[ConversationSummary])
-async def get_conversations():
+@api_router.post("/interview/evaluate-answer")
+async def evaluate_answer(request: EvaluationRequest):
     """
-    Get all conversations (sorted by most recent)
+    Evaluate an interview answer
     """
     try:
-        # Get all conversations sorted by updated_at
-        conversations = await conversations_collection.find().sort("updated_at", -1).to_list(1000)
-        
-        # Transform to summary format
-        summaries = [
-            ConversationSummary(
-                id=conv["id"],
-                title=conv["title"],
-                timestamp=conv["updated_at"]
-            )
-            for conv in conversations
-        ]
-        
-        return summaries
-        
+        evaluation = await interview_service.evaluate_answer(
+            question=request.question,
+            answer=request.answer,
+            role=request.role
+        )
+        return {"evaluation": evaluation}
     except Exception as e:
-        logger.error(f"Error getting conversations: {str(e)}")
+        logger.error(f"Error evaluating answer: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(conversation_id: str):
+@api_router.post("/interview/start-mock")
+async def start_mock_interview(request: MockStartRequest):
     """
-    Get a specific conversation with all messages
+    Start a mock interview session
     """
     try:
-        # Get conversation
-        conversation = await conversations_collection.find_one({"id": conversation_id})
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-        
-        # Get messages for this conversation
-        messages = await messages_collection.find(
-            {"conversation_id": conversation_id}
-        ).sort("created_at", 1).to_list(1000)
-        
-        # Build response
-        conversation_obj = Conversation(**conversation)
-        conversation_obj.messages = [Message(**msg) for msg in messages]
-        
-        return conversation_obj
-        
-    except HTTPException:
-        raise
+        result = await interview_service.start_mock_interview(role=request.role)
+        return result
     except Exception as e:
-        logger.error(f"Error getting conversation: {str(e)}")
+        logger.error(f"Error starting mock interview: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.delete("/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
+@api_router.post("/interview/mock-continue")
+async def continue_mock_interview(request: MockContinueRequest):
     """
-    Delete a conversation and all its messages
+    Continue mock interview with next question
     """
     try:
-        # Delete messages first
-        await messages_collection.delete_many({"conversation_id": conversation_id})
-        
-        # Delete conversation
-        result = await conversations_collection.delete_one({"id": conversation_id})
-        
-        if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-        
-        logger.info(f"Deleted conversation: {conversation_id}")
-        return {"success": True}
-        
-    except HTTPException:
-        raise
+        result = await interview_service.continue_mock_interview(
+            session_id=request.session_id,
+            answer=request.answer,
+            role=request.role,
+            question_count=request.question_count
+        )
+        return result
     except Exception as e:
-        logger.error(f"Error deleting conversation: {str(e)}")
+        logger.error(f"Error continuing mock interview: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/chat", response_model=ChatResponse)
-async def chat(chat_request: ChatRequest):
-    """
-    Send a message and get AI response
-    """
-    try:
-        # Get conversation to check if it exists
-        conversation = await conversations_collection.find_one({"id": chat_request.conversation_id})
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-        
-        # Create user message
-        user_message = Message(
-            conversation_id=chat_request.conversation_id,
-            role="user",
-            content=chat_request.message
-        )
-        
-        # Save user message
-        await messages_collection.insert_one(user_message.dict())
-        
-        # Update conversation title if it's the first message
-        message_count = await messages_collection.count_documents(
-            {"conversation_id": chat_request.conversation_id}
-        )
-        
-        if message_count == 1:
-            # Use first 50 characters of first message as title
-            title = chat_request.message[:50]
-            await conversations_collection.update_one(
-                {"id": chat_request.conversation_id},
-                {"$set": {"title": title, "updated_at": datetime.utcnow()}}
-            )
-        else:
-            # Just update the timestamp
-            await conversations_collection.update_one(
-                {"id": chat_request.conversation_id},
-                {"$set": {"updated_at": datetime.utcnow()}}
-            )
-        
-        # Get AI response
-        ai_response_text = await ai_service.get_response(
-            message=chat_request.message,
-            conversation_id=chat_request.conversation_id
-        )
-        
-        # Create assistant message
-        assistant_message = Message(
-            conversation_id=chat_request.conversation_id,
-            role="assistant",
-            content=ai_response_text
-        )
-        
-        # Save assistant message
-        await messages_collection.insert_one(assistant_message.dict())
-        
-        logger.info(f"Chat completed for conversation {chat_request.conversation_id}")
-        
-        return ChatResponse(
-            user_message=user_message,
-            assistant_message=assistant_message
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error in chat: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Include the router in the main app
+# Include router
 app.include_router(api_router)
 
 app.add_middleware(
